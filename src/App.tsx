@@ -59,8 +59,8 @@ export default function App() {
 
   // Register Service Worker for PWA (PRD Section 29)
   useEffect(() => {
-    if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
-      navigator.serviceWorker.register('/sw.js').catch(() => {});
+    if ('serviceWorker' in navigator && import.meta.env.PROD) {
+      navigator.serviceWorker.register('./sw.js').catch(() => {});
     }
 
     const handleOnline = () => setIsOnline(true);
@@ -75,51 +75,73 @@ export default function App() {
     };
   }, []);
 
-  // Fetch initial projects from server
+  // Fetch initial projects from localStorage and backend
   useEffect(() => {
+    const starterProject: Project = {
+      id: 'proj_starter_auratech',
+      title: 'AuraTech AI Studio',
+      category: 'AI Startup',
+      description: 'Autonomous neural engine and cognitive cloud infrastructure.',
+      subdomain: 'auratech-live',
+      isPublished: true,
+      publishedAt: new Date().toISOString(),
+      files: TEMPLATES[0].files,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      version: 1,
+    };
+
+    // 1. Check LocalStorage first
+    let loadedFromLocal = false;
+    try {
+      const cached = localStorage.getItem('saipratap_sc_projects');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setProjects(parsed);
+          setCurrentProject(parsed[0]);
+          loadedFromLocal = true;
+        }
+      }
+    } catch {
+      // ignore JSON parse error
+    }
+
+    if (!loadedFromLocal) {
+      setProjects([starterProject]);
+      setCurrentProject(starterProject);
+    }
+
+    // 2. Fetch from backend if available (full-stack mode)
     fetch('/api/projects')
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) throw new Error('Backend not available');
+        const contentType = res.headers.get('content-type') || '';
+        if (!contentType.includes('application/json')) {
+          throw new Error('Not JSON');
+        }
+        return res.json();
+      })
       .then((data) => {
-        if (data.projects && data.projects.length > 0) {
+        if (data && data.projects && data.projects.length > 0) {
           setProjects(data.projects);
           setCurrentProject(data.projects[0]);
-        } else {
-          // Default starter project if none exists yet
-          const starterProject: Project = {
-            id: 'proj_starter_auratech',
-            title: 'AuraTech AI Studio',
-            category: 'AI Startup',
-            description: 'Autonomous neural engine and cognitive cloud infrastructure.',
-            subdomain: 'auratech-live',
-            isPublished: true,
-            publishedAt: new Date().toISOString(),
-            files: TEMPLATES[0].files,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            version: 1,
-          };
-          setProjects([starterProject]);
-          setCurrentProject(starterProject);
+          localStorage.setItem('saipratap_sc_projects', JSON.stringify(data.projects));
         }
       })
       .catch(() => {
-        const starterProject: Project = {
-          id: 'proj_starter_auratech',
-          title: 'AuraTech AI Studio',
-          category: 'AI Startup',
-          description: 'Autonomous neural engine and cognitive cloud infrastructure.',
-          subdomain: 'auratech-live',
-          isPublished: true,
-          publishedAt: new Date().toISOString(),
-          files: TEMPLATES[0].files,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          version: 1,
-        };
-        setProjects([starterProject]);
-        setCurrentProject(starterProject);
+        // In static hosting (GitHub Pages), localStorage is the primary store
       });
   }, []);
+
+  // Save projects to localStorage whenever updated
+  useEffect(() => {
+    if (projects.length > 0) {
+      try {
+        localStorage.setItem('saipratap_sc_projects', JSON.stringify(projects));
+      } catch {}
+    }
+  }, [projects]);
 
   // Handler: Start with a prompt from HomePage
   const handleStartWithPrompt = (prompt: string, category: string = 'Business') => {

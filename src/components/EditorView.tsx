@@ -228,31 +228,56 @@ export const EditorView: React.FC<EditorViewProps> = ({
         }),
       });
 
-      const data = await response.json();
-      if (data.success && data.files) {
-        updateFilesWithHistory(data.files);
-        setChatMessages((prev) => [
-          ...prev,
-          {
-            sender: 'ai',
-            text: data.explanation || `Applied modification: "${userText}". Updated preview immediately!`,
-          },
-        ]);
-      } else {
-        setChatMessages((prev) => [
-          ...prev,
-          {
-            sender: 'ai',
-            text: `Processed request "${userText}". Updated styles and components.`,
-          },
-        ]);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.files) {
+          updateFilesWithHistory(data.files);
+          setChatMessages((prev) => [
+            ...prev,
+            {
+              sender: 'ai',
+              text: data.explanation || `Applied modification: "${userText}". Updated preview immediately!`,
+            },
+          ]);
+          return;
+        }
       }
+      throw new Error('Fallback to local modifications');
     } catch {
+      // Smart client-side modifications if backend is unavailable (e.g. GitHub Pages)
+      const updated = { ...files };
+      let appliedDesc = `Applied modifications for "${userText}".`;
+
+      if (updated['index.html']) {
+        let html = updated['index.html'].content;
+        const lower = userText.toLowerCase();
+
+        if (lower.includes('blue') || lower.includes('cyan')) {
+          html = html.replace(/from-[a-z]+-600/g, 'from-blue-600').replace(/to-[a-z]+-600/g, 'to-cyan-600');
+          appliedDesc = 'Updated theme accents to Blue & Cyan.';
+        } else if (lower.includes('emerald') || lower.includes('green')) {
+          html = html.replace(/from-[a-z]+-600/g, 'from-emerald-600').replace(/to-[a-z]+-600/g, 'to-teal-600');
+          appliedDesc = 'Updated theme accents to Emerald & Teal.';
+        } else if (lower.includes('rose') || lower.includes('red') || lower.includes('pink')) {
+          html = html.replace(/from-[a-z]+-600/g, 'from-rose-600').replace(/to-[a-z]+-600/g, 'to-pink-600');
+          appliedDesc = 'Updated theme accents to Rose & Pink.';
+        } else if (lower.includes('dark') || lower.includes('black')) {
+          html = html.replace(/bg-white/g, 'bg-slate-950').replace(/bg-slate-900/g, 'bg-black');
+          appliedDesc = 'Applied Deep Black dark mode styling.';
+        }
+
+        updated['index.html'] = {
+          ...updated['index.html'],
+          content: html,
+        };
+        updateFilesWithHistory(updated);
+      }
+
       setChatMessages((prev) => [
         ...prev,
         {
           sender: 'ai',
-          text: `Applied styling adjustments for "${userText}".`,
+          text: appliedDesc,
         },
       ]);
     } finally {

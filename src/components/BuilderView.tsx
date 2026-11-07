@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Project } from '../types';
+import { generateClientSideWebsite } from '../utils/clientGenerator';
 import {
   Wand2,
   Mic,
@@ -161,39 +162,59 @@ export const BuilderView: React.FC<BuilderViewProps> = ({
       const derivedTitle = title.trim() || prompt.split(' ').slice(0, 3).join(' ') || 'My Website';
       const cleanSub = derivedTitle.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/^-+|-+$/g, '') || `site-${Date.now().toString(36)}`;
 
-      const response = await fetch('/api/ai/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          prompt: `${prompt}. Design style: ${style}. Color palette: ${palette}.`,
-          category,
-          style,
-          title: derivedTitle,
-        }),
-      });
+      let generatedFiles: any = null;
+      let finalTitle = derivedTitle;
+      let finalDesc = prompt;
 
-      const data = await response.json();
+      try {
+        const response = await fetch('/api/ai/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            prompt: `${prompt}. Design style: ${style}. Color palette: ${palette}.`,
+            category,
+            style,
+            title: derivedTitle,
+          }),
+        });
+
+        if (response.ok) {
+          const contentType = response.headers.get('content-type') || '';
+          if (contentType.includes('application/json')) {
+            const data = await response.json();
+            if (data.success && data.files) {
+              generatedFiles = data.files;
+              finalTitle = data.title || derivedTitle;
+              finalDesc = data.description || prompt;
+            }
+          }
+        }
+      } catch (networkErr) {
+        console.warn('Backend unavailable, using client-side generator:', networkErr);
+      }
+
+      // If backend was unavailable (e.g. on GitHub Pages) or returned non-JSON
+      if (!generatedFiles) {
+        generatedFiles = generateClientSideWebsite(derivedTitle, category, prompt, style, palette);
+      }
+
       clearInterval(interval);
       setCurrentStepIndex(pipelineSteps.length - 1);
 
-      if (!response.ok || !data.success) {
-        throw new Error(data.error || 'Website generation failed. Retrying with fallback.');
-      }
-
       const newProject: Project = {
         id: `proj_${Date.now()}`,
-        title: data.title || derivedTitle,
+        title: finalTitle,
         category,
-        description: data.description || prompt,
+        description: finalDesc,
         subdomain: cleanSub,
         isPublished: false,
-        files: data.files,
+        files: generatedFiles,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         version: 1,
       };
 
-      // Also persist to server DB
+      // Also persist to server DB if server exists
       fetch('/api/projects', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
