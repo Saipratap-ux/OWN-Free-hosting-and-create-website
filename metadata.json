@@ -1,0 +1,6 @@
+{
+  "name": "SaipratapS❤️C",
+  "description": "AI-powered website builder, visual & code editor, automated error repair, and free public publishing platform.",
+  "requestFramePermissions": ["clipboard-read", "clipboard-write", "microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
