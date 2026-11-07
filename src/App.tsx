@@ -14,10 +14,12 @@ import { EditorView } from './components/EditorView';
 import { DashboardView } from './components/DashboardView';
 import { TemplatesView } from './components/TemplatesView';
 import { DeploymentsView } from './components/DeploymentsView';
+import { PublishingCenterView } from './components/PublishingCenterView';
 import { AdminView } from './components/AdminView';
 import { DocsView } from './components/DocsView';
 import { PublishModal } from './components/PublishModal';
 import { AuthModal } from './components/AuthModal';
+import { SettingsModal } from './components/SettingsModal';
 import {
   Layout,
   Wand2,
@@ -42,6 +44,7 @@ export default function App() {
   // Modals
   const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
 
   // User profile
   const [user, setUser] = useState<UserProfile>({
@@ -241,6 +244,7 @@ export default function App() {
         setActiveTab={setActiveTab}
         user={user}
         onOpenAuth={() => setIsAuthModalOpen(true)}
+        onOpenSettings={() => setIsSettingsModalOpen(true)}
       />
 
       {/* View Switcher */}
@@ -317,6 +321,18 @@ export default function App() {
           />
         )}
 
+        {activeTab === 'publishing' && (
+          <PublishingCenterView
+            projects={projects}
+            activeProject={currentProject}
+            setActiveTab={setActiveTab}
+            onOpenPublishModal={(p) => {
+              setCurrentProject(p);
+              setIsPublishModalOpen(true);
+            }}
+          />
+        )}
+
         {activeTab === 'admin' && (
           <AdminView projects={projects} setActiveTab={setActiveTab} />
         )}
@@ -360,13 +376,13 @@ export default function App() {
         </button>
 
         <button
-          onClick={() => setActiveTab('templates')}
+          onClick={() => setActiveTab('publishing')}
           className={`flex flex-col items-center gap-0.5 p-1.5 transition ${
-            activeTab === 'templates' ? 'text-indigo-400 font-bold' : 'text-slate-400'
+            activeTab === 'publishing' ? 'text-indigo-400 font-bold' : 'text-slate-400'
           }`}
         >
-          <Sparkles className="w-4 h-4" />
-          <span>Templates</span>
+          <Globe2 className="w-4 h-4" />
+          <span>Publish</span>
         </button>
 
         <button
@@ -401,6 +417,18 @@ export default function App() {
         onClose={() => setIsAuthModalOpen(false)}
         currentUser={user}
         onUpdateUser={setUser}
+      />
+
+      {/* Workspace Settings Modal */}
+      <SettingsModal
+        isOpen={isSettingsModalOpen}
+        onClose={() => setIsSettingsModalOpen(false)}
+        projects={projects}
+        user={user}
+        onRestoreProjects={(restored) => {
+          setProjects(restored);
+          if (restored.length > 0) setCurrentProject(restored[0]);
+        }}
       />
     </div>
   );

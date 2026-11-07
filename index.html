@@ -17,10 +17,102 @@
     <link rel="icon" type="image/svg+xml" href="./icon.svg" />
     <link rel="apple-touch-icon" href="./icon-192.png" />
     <link rel="manifest" href="./manifest.webmanifest" />
+    <style>
+      /* Fallback inline styles for pre-load screen to guarantee zero blank white flash */
+      body {
+        margin: 0;
+        padding: 0;
+        background-color: #020617;
+        color: #f8fafc;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      }
+      #initial-loader {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background-color: #020617;
+        z-index: 9999;
+      }
+      .loader-badge {
+        width: 64px;
+        height: 64px;
+        border-radius: 18px;
+        background: linear-gradient(135deg, #4f46e5, #7c3aed, #e11d48);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 28px;
+        font-weight: 900;
+        color: #ffffff;
+        box-shadow: 0 10px 25px -5px rgba(79, 70, 229, 0.4);
+        margin-bottom: 20px;
+        animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+      }
+      .loader-title {
+        font-size: 20px;
+        font-weight: 800;
+        letter-spacing: -0.5px;
+        color: #ffffff;
+        margin: 0;
+      }
+      .loader-subtitle {
+        font-size: 12px;
+        color: #94a3b8;
+        margin-top: 6px;
+      }
+      .loader-bar {
+        width: 140px;
+        height: 3px;
+        background-color: #1e293b;
+        border-radius: 999px;
+        margin-top: 24px;
+        overflow: hidden;
+        position: relative;
+      }
+      .loader-bar::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 100%;
+        width: 50%;
+        background: linear-gradient(90deg, #4f46e5, #e11d48);
+        border-radius: 999px;
+        animation: loadingBar 1.5s ease-in-out infinite;
+      }
+      @keyframes pulse {
+        0%, 100% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.05); opacity: 0.85; }
+      }
+      @keyframes loadingBar {
+        0% { left: -50%; width: 30%; }
+        50% { width: 60%; }
+        100% { left: 100%; width: 30%; }
+      }
+    </style>
+    <script>
+      // Global error listener to detect and display diagnostics instead of blank screen
+      window.addEventListener('error', function(e) {
+        console.error('SaipratapS❤️C Resource/Runtime Error:', e);
+      });
+      window.addEventListener('unhandledrejection', function(e) {
+        console.error('SaipratapS❤️C Unhandled Rejection:', e.reason);
+      });
+    </script>
   </head>
   <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <div id="root">
+      <!-- Branded Initial Loading Screen (replaced automatically when React mounts) -->
+      <div id="initial-loader">
+        <div class="loader-badge">S</div>
+        <h1 class="loader-title">SaipratapS❤️C</h1>
+        <p class="loader-subtitle">Loading AI Website Builder & Publishing Studio...</p>
+        <div class="loader-bar"></div>
+      </div>
+    </div>
+    <script type="module" src="./src/main.tsx"></script>
   </body>
 </html>
-

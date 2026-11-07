@@ -15,6 +15,8 @@ import {
   ShieldCheck,
   Smartphone,
   ChevronDown,
+  Settings,
+  UploadCloud,
 } from 'lucide-react';
 
 interface NavbarProps {
@@ -22,6 +24,7 @@ interface NavbarProps {
   setActiveTab: (tab: ActiveTab) => void;
   user: UserProfile;
   onOpenAuth: () => void;
+  onOpenSettings?: () => void;
   onVoiceStart?: () => void;
 }
 
@@ -30,6 +33,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   setActiveTab,
   user,
   onOpenAuth,
+  onOpenSettings,
   onVoiceStart,
 }) => {
   const { isInstallable, isInstalled, isIOS, install } = usePWAInstall();
@@ -42,7 +46,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     { id: 'editor', label: 'Live Editor', icon: <FileCode2 className="w-4 h-4 text-indigo-400" /> },
     { id: 'templates', label: 'Templates', icon: <Sparkles className="w-4 h-4 text-pink-400" /> },
     { id: 'dashboard', label: 'Projects', icon: <FolderGit2 className="w-4 h-4 text-blue-400" /> },
-    { id: 'deployments', label: 'Deployments', icon: <Globe2 className="w-4 h-4 text-emerald-400" /> },
+    { id: 'publishing', label: 'Publishing', icon: <UploadCloud className="w-4 h-4 text-emerald-400" /> },
   ];
 
   return (
@@ -139,6 +143,17 @@ export const Navbar: React.FC<NavbarProps> = ({
               PRO FREE
             </span>
           </button>
+
+          {/* Settings Button */}
+          {onOpenSettings && (
+            <button
+              onClick={onOpenSettings}
+              className="p-2 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-400 hover:text-white transition"
+              title="Workspace Settings"
+            >
+              <Settings className="w-4 h-4" />
+            </button>
+          )}
 
           {/* Mobile menu trigger */}
           <button

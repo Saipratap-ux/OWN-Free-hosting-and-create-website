@@ -57,6 +57,7 @@ export type ActiveTab =
   | 'editor'
   | 'templates'
   | 'deployments'
+  | 'publishing'
   | 'admin'
   | 'docs'
   | 'settings';
